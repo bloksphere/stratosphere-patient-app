@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
@@ -148,6 +150,7 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'profile', name: 'Profile' },
+    { id: 'appearance', name: 'Appearance' },
     { id: 'security', name: 'Security' },
     { id: 'notifications', name: 'Notifications' },
     { id: 'privacy', name: 'Privacy' },
@@ -268,6 +271,119 @@ export default function SettingsPage() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Appearance Tab */}
+      {activeTab === 'appearance' && (
+        <div className="p-6 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <h2 className="text-lg font-semibold mb-6" style={{ color: 'var(--text-main)' }}>Appearance</h2>
+          <div className="space-y-6">
+            {/* Theme Selection */}
+            <div>
+              <h3 className="text-sm font-medium mb-4" style={{ color: 'var(--text-main)' }}>Theme</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Light Theme */}
+                <button
+                  onClick={() => setTheme('light')}
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                    theme === 'light' ? 'border-primary-500 ring-2 ring-primary-200' : ''
+                  }`}
+                  style={{
+                    backgroundColor: theme === 'light' ? 'var(--primary-light)' : 'var(--bg-main)',
+                    borderColor: theme === 'light' ? 'var(--primary)' : 'var(--border)'
+                  }}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center shadow-sm">
+                      <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    </div>
+                    <span className="font-medium" style={{ color: 'var(--text-main)' }}>Light</span>
+                  </div>
+                  <div className="h-16 rounded-lg bg-white border border-gray-200 p-2">
+                    <div className="h-2 w-16 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-2 w-12 bg-gray-100 rounded"></div>
+                  </div>
+                </button>
+
+                {/* Dark Theme */}
+                <button
+                  onClick={() => setTheme('dark')}
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                    theme === 'dark' ? 'border-primary-500 ring-2 ring-primary-200' : ''
+                  }`}
+                  style={{
+                    backgroundColor: theme === 'dark' ? 'var(--primary-light)' : 'var(--bg-main)',
+                    borderColor: theme === 'dark' ? 'var(--primary)' : 'var(--border)'
+                  }}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center shadow-sm">
+                      <svg className="w-5 h-5 text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                      </svg>
+                    </div>
+                    <span className="font-medium" style={{ color: 'var(--text-main)' }}>Dark</span>
+                  </div>
+                  <div className="h-16 rounded-lg bg-gray-800 border border-gray-700 p-2">
+                    <div className="h-2 w-16 bg-gray-600 rounded mb-2"></div>
+                    <div className="h-2 w-12 bg-gray-700 rounded"></div>
+                  </div>
+                </button>
+
+                {/* System Theme - future enhancement */}
+                <button
+                  disabled
+                  className="p-4 rounded-xl border-2 opacity-50 cursor-not-allowed"
+                  style={{
+                    backgroundColor: 'var(--bg-main)',
+                    borderColor: 'var(--border)'
+                  }}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-white to-gray-800 border border-gray-300 flex items-center justify-center shadow-sm">
+                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <span className="font-medium" style={{ color: 'var(--text-muted)' }}>System</span>
+                  </div>
+                  <div className="h-16 rounded-lg bg-gradient-to-r from-white to-gray-800 p-2">
+                    <div className="h-2 w-16 bg-gray-400 rounded mb-2"></div>
+                    <div className="h-2 w-12 bg-gray-500 rounded"></div>
+                  </div>
+                  <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Coming soon</p>
+                </button>
+              </div>
+            </div>
+
+            {/* Current Theme Info */}
+            <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #34d399 0%, #047857 100%)' }}>
+                  {theme === 'light' ? (
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium" style={{ color: 'var(--text-main)' }}>
+                    Currently using {theme === 'light' ? 'Light' : 'Dark'} mode
+                  </p>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    Your preference is saved automatically
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

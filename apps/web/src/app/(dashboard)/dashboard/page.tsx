@@ -55,7 +55,7 @@ export default function DashboardPage() {
 
   const quickActions = [
     { name: 'Add BP Reading', href: '/health?add=blood_pressure', icon: Heart, color: 'bg-red-100 text-red-600' },
-    { name: 'Add Glucose', href: '/health?add=glucose', icon: Droplets, color: 'bg-blue-100 text-blue-600' },
+    { name: 'Add Glucose', href: '/health?add=glucose', icon: Droplets, color: 'bg-primary-100 text-primary-600' },
     { name: 'Log Weight', href: '/health?add=weight', icon: Scale, color: 'bg-green-100 text-green-600' },
     { name: 'Book Appointment', href: '/appointments/new', icon: Calendar, color: 'bg-purple-100 text-purple-600' },
   ];
@@ -163,8 +163,8 @@ export default function DashboardPage() {
                 <p className="text-sm text-gray-400 mt-2">No readings yet</p>
               )}
             </div>
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <Droplets className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+              <Droplets className="w-5 h-5 text-primary-600" />
             </div>
           </div>
         </Card>

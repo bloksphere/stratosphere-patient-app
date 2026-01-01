@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-100 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex flex-col">
       {/* Header */}
       <header className="py-6 px-4">
         <div className="max-w-7xl mx-auto">

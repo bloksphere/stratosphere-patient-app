@@ -2,6 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+  Legend,
+  ReferenceArea
+} from 'recharts';
 
 interface HealthReading {
   id: string;
@@ -33,11 +45,16 @@ export default function DashboardHome() {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [healthReadings, setHealthReadings] = useState<HealthReading[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Helper to get current date/time in local format
+  const getCurrentDate = () => new Date().toISOString().split('T')[0];
+  const getCurrentTime = () => new Date().toTimeString().slice(0, 5);
 
   // Form states
-  const [bpForm, setBpForm] = useState({ systolic: '', diastolic: '', notes: '' });
-  const [glucoseForm, setGlucoseForm] = useState({ value: '', notes: '' });
-  const [weightForm, setWeightForm] = useState({ value: '', notes: '' });
+  const [bpForm, setBpForm] = useState({ systolic: '', diastolic: '', date: getCurrentDate(), time: getCurrentTime(), notes: '' });
+  const [glucoseForm, setGlucoseForm] = useState({ value: '', date: getCurrentDate(), time: getCurrentTime(), notes: '' });
+  const [weightForm, setWeightForm] = useState({ value: '', date: getCurrentDate(), time: getCurrentTime(), notes: '' });
   const [appointmentForm, setAppointmentForm] = useState({
     doctorName: '',
     specialty: '',
@@ -47,6 +64,11 @@ export default function DashboardHome() {
     notes: ''
   });
   const [saving, setSaving] = useState(false);
+
+  // Set mounted state for client-side rendering of charts
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Load data from localStorage
   useEffect(() => {
@@ -172,13 +194,16 @@ export default function DashboardHome() {
     if (!bpForm.systolic || !bpForm.diastolic) return;
     setSaving(true);
 
+    // Create timestamp from user-selected date and time
+    const timestamp = new Date(`${bpForm.date}T${bpForm.time}`).toISOString();
+
     const newReading: HealthReading = {
       id: crypto.randomUUID(),
       type: 'bp',
       value: `${bpForm.systolic}/${bpForm.diastolic}`,
       systolic: parseInt(bpForm.systolic),
       diastolic: parseInt(bpForm.diastolic),
-      timestamp: new Date().toISOString(),
+      timestamp,
       notes: bpForm.notes || undefined
     };
 
@@ -186,7 +211,7 @@ export default function DashboardHome() {
     setHealthReadings(updatedReadings);
     localStorage.setItem('health_readings', JSON.stringify(updatedReadings));
 
-    setBpForm({ systolic: '', diastolic: '', notes: '' });
+    setBpForm({ systolic: '', diastolic: '', date: getCurrentDate(), time: getCurrentTime(), notes: '' });
     setSaving(false);
     setActiveModal(null);
   };
@@ -196,12 +221,15 @@ export default function DashboardHome() {
     if (!glucoseForm.value) return;
     setSaving(true);
 
+    // Create timestamp from user-selected date and time
+    const timestamp = new Date(`${glucoseForm.date}T${glucoseForm.time}`).toISOString();
+
     const newReading: HealthReading = {
       id: crypto.randomUUID(),
       type: 'glucose',
       value: glucoseForm.value,
       glucose: parseFloat(glucoseForm.value),
-      timestamp: new Date().toISOString(),
+      timestamp,
       notes: glucoseForm.notes || undefined
     };
 
@@ -209,7 +237,7 @@ export default function DashboardHome() {
     setHealthReadings(updatedReadings);
     localStorage.setItem('health_readings', JSON.stringify(updatedReadings));
 
-    setGlucoseForm({ value: '', notes: '' });
+    setGlucoseForm({ value: '', date: getCurrentDate(), time: getCurrentTime(), notes: '' });
     setSaving(false);
     setActiveModal(null);
   };
@@ -219,12 +247,15 @@ export default function DashboardHome() {
     if (!weightForm.value) return;
     setSaving(true);
 
+    // Create timestamp from user-selected date and time
+    const timestamp = new Date(`${weightForm.date}T${weightForm.time}`).toISOString();
+
     const newReading: HealthReading = {
       id: crypto.randomUUID(),
       type: 'weight',
       value: weightForm.value,
       weight: parseFloat(weightForm.value),
-      timestamp: new Date().toISOString(),
+      timestamp,
       notes: weightForm.notes || undefined
     };
 
@@ -232,7 +263,7 @@ export default function DashboardHome() {
     setHealthReadings(updatedReadings);
     localStorage.setItem('health_readings', JSON.stringify(updatedReadings));
 
-    setWeightForm({ value: '', notes: '' });
+    setWeightForm({ value: '', date: getCurrentDate(), time: getCurrentTime(), notes: '' });
     setSaving(false);
     setActiveModal(null);
   };
@@ -294,54 +325,73 @@ export default function DashboardHome() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {firstName}</h1>
-        <p className="text-gray-600">Here is an overview of your health</p>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Quick Actions - Stratosphere EMR Style Gradient Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
         <button
           onClick={() => setActiveModal('bp')}
-          className="p-4 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow text-left"
+          className="p-5 rounded-2xl text-left transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg"
+          style={{ background: 'linear-gradient(135deg, #fb7185 0%, #be123c 100%)' }}
         >
-          <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mb-3">
-            <span className="text-red-600 text-xl">BP</span>
+          <div className="flex justify-between items-start mb-3">
+            <h3 className="text-white/90 text-sm font-medium">Blood Pressure</h3>
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
           </div>
-          <span className="font-medium text-gray-900">Log BP</span>
+          <span className="text-white font-bold text-lg">Log BP</span>
         </button>
         <button
           onClick={() => setActiveModal('glucose')}
-          className="p-4 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow text-left"
+          className="p-5 rounded-2xl text-left transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg"
+          style={{ background: 'linear-gradient(135deg, #60a5fa 0%, #1e40af 100%)' }}
         >
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
-            <span className="text-blue-600 text-xl">G</span>
+          <div className="flex justify-between items-start mb-3">
+            <h3 className="text-white/90 text-sm font-medium">Blood Glucose</h3>
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+            </div>
           </div>
-          <span className="font-medium text-gray-900">Log Glucose</span>
+          <span className="text-white font-bold text-lg">Log Glucose</span>
         </button>
         <button
           onClick={() => setActiveModal('weight')}
-          className="p-4 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow text-left"
+          className="p-5 rounded-2xl text-left transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg"
+          style={{ background: 'linear-gradient(135deg, #34d399 0%, #047857 100%)' }}
         >
-          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-3">
-            <span className="text-green-600 text-xl">W</span>
+          <div className="flex justify-between items-start mb-3">
+            <h3 className="text-white/90 text-sm font-medium">Weight</h3>
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+              </svg>
+            </div>
           </div>
-          <span className="font-medium text-gray-900">Log Weight</span>
+          <span className="text-white font-bold text-lg">Log Weight</span>
         </button>
         <button
           onClick={() => setActiveModal('appointment')}
-          className="p-4 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow text-left"
+          className="p-5 rounded-2xl text-left transition-all duration-300 hover:translate-y-[-4px] hover:shadow-lg"
+          style={{ background: 'linear-gradient(135deg, #c084fc 0%, #7c3aed 100%)' }}
         >
-          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
-            <span className="text-purple-600 text-xl">A</span>
+          <div className="flex justify-between items-start mb-3">
+            <h3 className="text-white/90 text-sm font-medium">Appointments</h3>
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
           </div>
-          <span className="font-medium text-gray-900">Book Appt</span>
+          <span className="text-white font-bold text-lg">Book Appt</span>
         </button>
       </div>
 
       {/* Health Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
+        <div className="p-6 rounded-2xl transition-all duration-300 hover:translate-y-[-2px]" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-gray-500">Blood Pressure</h3>
             <span className={`text-xs px-2 py-1 rounded-full ${
@@ -375,7 +425,7 @@ export default function DashboardHome() {
           <p className="mt-1 text-xs text-gray-400 italic">Based on NICE Guidelines (NG136)</p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
+        <div className="p-6 rounded-2xl transition-all duration-300 hover:translate-y-[-2px]" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-gray-500">Blood Glucose</h3>
             <span className={`text-xs px-2 py-1 rounded-full ${
@@ -412,7 +462,7 @@ export default function DashboardHome() {
           <p className="mt-1 text-xs text-gray-400 italic">Based on NICE Guidelines (NG28)</p>
         </div>
 
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
+        <div className="p-6 rounded-2xl transition-all duration-300 hover:translate-y-[-2px]" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-gray-500">Weight</h3>
             {weightChange !== null && (
@@ -437,19 +487,201 @@ export default function DashboardHome() {
         </div>
       </div>
 
+      {/* Health History Graphs */}
+      <div className="space-y-6">
+        {/* BP History Graph */}
+        {isMounted && healthReadings.filter(r => r.type === 'bp').length > 0 && (
+          <div className="p-6 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium" style={{ color: 'var(--text-main)' }}>Blood Pressure History</h3>
+              <div className="flex items-center space-x-4 text-xs">
+                <span className="flex items-center">
+                  <span className="w-3 h-0.5 bg-red-500 mr-1"></span>
+                  Systolic
+                </span>
+                <span className="flex items-center">
+                  <span className="w-3 h-0.5 bg-emerald-500 mr-1"></span>
+                  Diastolic
+                </span>
+              </div>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={healthReadings
+                    .filter(r => r.type === 'bp')
+                    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                    .slice(-14)
+                    .map(r => ({
+                      date: new Date(r.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                      systolic: r.systolic,
+                      diastolic: r.diastolic
+                    }))}
+                  margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                  <YAxis domain={[40, 200]} tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                    formatter={(value: number, name: string) => [
+                      `${value} mmHg`,
+                      name === 'systolic' ? 'Systolic' : 'Diastolic'
+                    ]}
+                  />
+                  {/* Healthy range shading */}
+                  <ReferenceArea y1={90} y2={120} fill="#22c55e" fillOpacity={0.1} />
+                  <ReferenceArea y1={60} y2={80} fill="#10b981" fillOpacity={0.1} />
+                  {/* NICE Guidelines reference lines - no inline labels */}
+                  <ReferenceLine y={120} stroke="#22c55e" strokeDasharray="5 5" />
+                  <ReferenceLine y={135} stroke="#f59e0b" strokeDasharray="5 5" />
+                  <ReferenceLine y={80} stroke="#10b981" strokeDasharray="5 5" />
+                  <ReferenceLine y={85} stroke="#f59e0b" strokeDasharray="5 5" />
+                  <Line
+                    type="monotone"
+                    dataKey="systolic"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="diastolic"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            {/* Legend below chart */}
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
+              <span className="flex items-center"><span className="w-4 h-0.5 bg-green-500 mr-1.5"></span><span className="text-gray-600">Normal: &lt;120/80</span></span>
+              <span className="flex items-center"><span className="w-4 h-0.5 bg-amber-500 mr-1.5"></span><span className="text-gray-600">Stage 1: 135/85</span></span>
+            </div>
+          </div>
+        )}
+
+        {/* Glucose History Graph */}
+        {isMounted && healthReadings.filter(r => r.type === 'glucose').length > 0 && (
+          <div className="p-6 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium" style={{ color: 'var(--text-main)' }}>Blood Glucose History</h3>
+              <span className="text-xs text-gray-500">mmol/L</span>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={healthReadings
+                    .filter(r => r.type === 'glucose')
+                    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                    .slice(-14)
+                    .map(r => ({
+                      date: new Date(r.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                      glucose: r.glucose
+                    }))}
+                  margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                  <YAxis domain={[0, 15]} tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                    formatter={(value: number) => [`${value.toFixed(1)} mmol/L`, 'Glucose']}
+                  />
+                  {/* Healthy range shading (4.0-5.9 mmol/L) */}
+                  <ReferenceArea y1={4.0} y2={5.9} fill="#22c55e" fillOpacity={0.15} />
+                  {/* NICE Guidelines reference lines - no inline labels */}
+                  <ReferenceLine y={4.0} stroke="#ef4444" strokeDasharray="5 5" />
+                  <ReferenceLine y={5.9} stroke="#22c55e" strokeDasharray="5 5" />
+                  <ReferenceLine y={7.0} stroke="#f59e0b" strokeDasharray="5 5" />
+                  <ReferenceLine y={11.1} stroke="#ef4444" strokeDasharray="5 5" />
+                  <Line
+                    type="monotone"
+                    dataKey="glucose"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            {/* Legend below chart */}
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
+              <span className="flex items-center"><span className="w-4 h-0.5 bg-red-500 mr-1.5"></span><span className="text-gray-600">Low: &lt;4.0</span></span>
+              <span className="flex items-center"><span className="w-4 h-0.5 bg-green-500 mr-1.5"></span><span className="text-gray-600">Normal: 4.0-5.9</span></span>
+              <span className="flex items-center"><span className="w-4 h-0.5 bg-amber-500 mr-1.5"></span><span className="text-gray-600">Pre-diabetes: 7.0</span></span>
+              <span className="flex items-center"><span className="w-4 h-0.5 bg-red-500 mr-1.5"></span><span className="text-gray-600">Very High: 11.1+</span></span>
+            </div>
+          </div>
+        )}
+
+        {/* Weight History Graph */}
+        {isMounted && healthReadings.filter(r => r.type === 'weight').length > 0 && (
+          <div className="p-6 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium" style={{ color: 'var(--text-main)' }}>Weight History</h3>
+              <span className="text-xs text-gray-500">kg</span>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={healthReadings
+                    .filter(r => r.type === 'weight')
+                    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                    .slice(-14)
+                    .map(r => ({
+                      date: new Date(r.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                      weight: r.weight
+                    }))}
+                  margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                  <YAxis
+                    domain={['dataMin - 5', 'dataMax + 5']}
+                    tick={{ fontSize: 11 }}
+                    stroke="#9ca3af"
+                    tickFormatter={(value) => value.toFixed(0)}
+                  />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                    formatter={(value: number) => [`${value.toFixed(1)} kg`, 'Weight']}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="weight"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="mt-3 text-xs text-gray-500 text-center">
+              Track your weight over time. Consistent monitoring helps identify trends.
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* Upcoming Appointments */}
       {upcomingAppointments.length > 0 && (
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Upcoming Appointments</h3>
+        <div className="p-6 rounded-2xl" style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}>
+          <h3 className="text-lg font-medium mb-4" style={{ color: 'var(--text-main)' }}>Upcoming Appointments</h3>
           <div className="space-y-3">
             {upcomingAppointments.map((apt) => (
               <div key={apt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    apt.type === 'video' ? 'bg-blue-100' : 'bg-purple-100'
+                    apt.type === 'video' ? 'bg-primary-100' : 'bg-purple-100'
                   }`}>
                     {apt.type === 'video' ? (
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
                     ) : (
@@ -507,6 +739,28 @@ export default function DashboardHome() {
                     value={bpForm.diastolic}
                     onChange={(e) => setBpForm({ ...bpForm, diastolic: e.target.value })}
                     placeholder="80"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={bpForm.date}
+                    onChange={(e) => setBpForm({ ...bpForm, date: e.target.value })}
+                    max={getCurrentDate()}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                  <input
+                    type="time"
+                    value={bpForm.time}
+                    onChange={(e) => setBpForm({ ...bpForm, time: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   />
                 </div>
@@ -572,6 +826,28 @@ export default function DashboardHome() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={glucoseForm.date}
+                    onChange={(e) => setGlucoseForm({ ...glucoseForm, date: e.target.value })}
+                    max={getCurrentDate()}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                  <input
+                    type="time"
+                    value={glucoseForm.time}
+                    onChange={(e) => setGlucoseForm({ ...glucoseForm, time: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
                 <textarea
@@ -629,6 +905,28 @@ export default function DashboardHome() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 pr-12"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">kg</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={weightForm.date}
+                    onChange={(e) => setWeightForm({ ...weightForm, date: e.target.value })}
+                    max={getCurrentDate()}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                  <input
+                    type="time"
+                    value={weightForm.time}
+                    onChange={(e) => setWeightForm({ ...weightForm, time: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
                 </div>
               </div>
 

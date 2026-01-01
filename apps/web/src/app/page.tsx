@@ -61,7 +61,7 @@ export default function Home() {
             </div>
             <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               {t('hero.title')}{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-blue-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-400">
                 {t('hero.titleHighlight')}
               </span>
             </h1>
@@ -89,7 +89,7 @@ export default function Home() {
 
           {/* Hero Image/Illustration */}
           <div className="mt-16 relative">
-            <div className="bg-gradient-to-br from-primary-100 to-blue-100 rounded-3xl p-8 shadow-2xl shadow-primary-100">
+            <div className="bg-gradient-to-br from-primary-100 to-primary-200 rounded-3xl p-8 shadow-2xl shadow-primary-100">
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                 <div className="bg-gray-50 px-4 py-3 border-b border-gray-100 flex items-center space-x-2">
                   <div className="w-3 h-3 rounded-full bg-red-400"></div>
@@ -113,9 +113,9 @@ export default function Home() {
                       <div className="text-green-600 text-2xl font-bold">120/80</div>
                       <div className="text-green-700 text-sm">Blood Pressure</div>
                     </div>
-                    <div className="bg-blue-50 p-4 rounded-xl">
-                      <div className="text-blue-600 text-2xl font-bold">98.6°F</div>
-                      <div className="text-blue-700 text-sm">Temperature</div>
+                    <div className="bg-primary-50 p-4 rounded-xl">
+                      <div className="text-primary-600 text-2xl font-bold">98.6°F</div>
+                      <div className="text-primary-700 text-sm">Temperature</div>
                     </div>
                     <div className="bg-purple-50 p-4 rounded-xl">
                       <div className="text-purple-600 text-2xl font-bold">72 bpm</div>
@@ -140,8 +140,8 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
             <div className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-lg transition-shadow border border-gray-100">
-              <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
-                <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-6">
+                <svg className="w-7 h-7 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
@@ -268,7 +268,7 @@ export default function Home() {
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
               </div>
