@@ -71,21 +71,85 @@ export default function DashboardHome() {
   const latestGlucose = getLatestReading('glucose');
   const latestWeight = getLatestReading('weight');
 
-  // Get BP status
+  // Get BP status based on NICE Hypertension Guidelines (NG136)
+  // https://www.nice.org.uk/guidance/ng136
   const getBPStatus = (systolic?: number, diastolic?: number) => {
-    if (!systolic || !diastolic) return { label: 'No data', color: 'gray' };
-    if (systolic < 120 && diastolic < 80) return { label: 'Normal', color: 'green' };
-    if (systolic < 130 && diastolic < 80) return { label: 'Elevated', color: 'yellow' };
-    if (systolic < 140 || diastolic < 90) return { label: 'High Stage 1', color: 'orange' };
-    return { label: 'High Stage 2', color: 'red' };
+    if (!systolic || !diastolic) return { label: 'No data', color: 'gray', description: '' };
+
+    // NICE Guidelines stages:
+    // Normal: <120/80
+    // High-normal: 120-129 and/or 80-84
+    // Stage 1 hypertension: 140-159 and/or 90-99 (clinic) or 135-149 and/or 85-94 (home/ABPM)
+    // Stage 2 hypertension: 160-179 and/or 100-109 (clinic) or 150-179 and/or 95-109 (home/ABPM)
+    // Stage 3 (Severe): ≥180 and/or ≥110
+
+    // Using home/self-monitoring thresholds as these are patient-entered readings
+    if (systolic < 120 && diastolic < 80) {
+      return { label: 'Normal', color: 'green', description: 'Your blood pressure is in the healthy range' };
+    }
+    if (systolic < 135 && diastolic < 85) {
+      return { label: 'High-Normal', color: 'yellow', description: 'Slightly elevated - maintain healthy lifestyle' };
+    }
+    if (systolic < 150 && diastolic < 95) {
+      return { label: 'Stage 1', color: 'orange', description: 'Stage 1 hypertension - consult your doctor' };
+    }
+    if (systolic < 180 && diastolic < 110) {
+      return { label: 'Stage 2', color: 'red', description: 'Stage 2 hypertension - seek medical advice' };
+    }
+    return { label: 'Stage 3', color: 'red', description: 'Severe hypertension - seek urgent medical attention' };
   };
 
-  // Get Glucose status
+  // Get Glucose status based on NICE Diabetes Guidelines (NG28)
+  // https://www.nice.org.uk/guidance/ng28
+  // Using fasting plasma glucose thresholds for self-monitoring
   const getGlucoseStatus = (value?: number) => {
-    if (!value) return { label: 'No data', color: 'gray' };
-    if (value < 100) return { label: 'Normal', color: 'green' };
-    if (value < 126) return { label: 'Pre-diabetic', color: 'yellow' };
-    return { label: 'High', color: 'red' };
+    if (!value) return { label: 'No data', color: 'gray', description: '', target: '' };
+
+    // NICE Guidelines (NG28) - Target ranges for self-monitoring:
+    // Fasting: 4-7 mmol/L (for people with diabetes)
+    // Non-diabetic normal: <6.0 mmol/L fasting
+    // Pre-diabetes (IGT/IFG): 6.0-6.9 mmol/L fasting
+    // Diabetes diagnosis threshold: ≥7.0 mmol/L fasting
+    // Hypoglycemia: <4.0 mmol/L
+
+    if (value < 4.0) {
+      return {
+        label: 'Low',
+        color: 'red',
+        description: 'Hypoglycemia - take fast-acting glucose immediately',
+        target: 'Target: 4.0-5.9 mmol/L (fasting)'
+      };
+    }
+    if (value < 6.0) {
+      return {
+        label: 'Normal',
+        color: 'green',
+        description: 'Your blood glucose is in the healthy range',
+        target: 'Target: 4.0-5.9 mmol/L (fasting)'
+      };
+    }
+    if (value < 7.0) {
+      return {
+        label: 'Pre-diabetes',
+        color: 'yellow',
+        description: 'Impaired fasting glucose - lifestyle changes recommended',
+        target: 'Target: 4.0-5.9 mmol/L (fasting)'
+      };
+    }
+    if (value < 11.1) {
+      return {
+        label: 'High',
+        color: 'orange',
+        description: 'Elevated glucose - consult your healthcare provider',
+        target: 'Diabetes target: 4.0-7.0 mmol/L (fasting)'
+      };
+    }
+    return {
+      label: 'Very High',
+      color: 'red',
+      description: 'Significantly elevated - seek medical advice promptly',
+      target: 'Diabetes target: 4.0-7.0 mmol/L (fasting)'
+    };
   };
 
   // Format timestamp
@@ -136,7 +200,7 @@ export default function DashboardHome() {
       id: crypto.randomUUID(),
       type: 'glucose',
       value: glucoseForm.value,
-      glucose: parseInt(glucoseForm.value),
+      glucose: parseFloat(glucoseForm.value),
       timestamp: new Date().toISOString(),
       notes: glucoseForm.notes || undefined
     };
@@ -294,9 +358,21 @@ export default function DashboardHome() {
             </span>
             <span className="ml-2 text-sm text-gray-500">mmHg</span>
           </div>
-          <p className="mt-2 text-xs text-gray-500">
+          {bpStatus.description && (
+            <p className={`mt-2 text-xs ${
+              bpStatus.color === 'green' ? 'text-green-600' :
+              bpStatus.color === 'yellow' ? 'text-yellow-600' :
+              bpStatus.color === 'orange' ? 'text-orange-600' :
+              bpStatus.color === 'red' ? 'text-red-600' :
+              'text-gray-500'
+            }`}>
+              {bpStatus.description}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-gray-400">
             {latestBP ? `Last reading: ${formatTimestamp(latestBP.timestamp)}` : 'No readings yet'}
           </p>
+          <p className="mt-1 text-xs text-gray-400 italic">Based on NICE Guidelines (NG136)</p>
         </div>
 
         <div className="bg-white p-6 rounded-xl border border-gray-200">
@@ -305,19 +381,35 @@ export default function DashboardHome() {
             <span className={`text-xs px-2 py-1 rounded-full ${
               glucoseStatus.color === 'green' ? 'text-green-600 bg-green-50' :
               glucoseStatus.color === 'yellow' ? 'text-yellow-600 bg-yellow-50' :
+              glucoseStatus.color === 'orange' ? 'text-orange-600 bg-orange-50' :
               glucoseStatus.color === 'red' ? 'text-red-600 bg-red-50' :
               'text-gray-600 bg-gray-50'
             }`}>{glucoseStatus.label}</span>
           </div>
           <div className="flex items-baseline">
             <span className="text-3xl font-bold text-gray-900">
-              {latestGlucose ? latestGlucose.glucose : '--'}
+              {latestGlucose ? latestGlucose.glucose?.toFixed(1) : '--'}
             </span>
-            <span className="ml-2 text-sm text-gray-500">mg/dL</span>
+            <span className="ml-2 text-sm text-gray-500">mmol/L</span>
           </div>
-          <p className="mt-2 text-xs text-gray-500">
+          {glucoseStatus.description && (
+            <p className={`mt-2 text-xs ${
+              glucoseStatus.color === 'green' ? 'text-green-600' :
+              glucoseStatus.color === 'yellow' ? 'text-yellow-600' :
+              glucoseStatus.color === 'orange' ? 'text-orange-600' :
+              glucoseStatus.color === 'red' ? 'text-red-600' :
+              'text-gray-500'
+            }`}>
+              {glucoseStatus.description}
+            </p>
+          )}
+          {glucoseStatus.target && (
+            <p className="mt-1 text-xs text-gray-500">{glucoseStatus.target}</p>
+          )}
+          <p className="mt-1 text-xs text-gray-400">
             {latestGlucose ? `Last reading: ${formatTimestamp(latestGlucose.timestamp)}` : 'No readings yet'}
           </p>
+          <p className="mt-1 text-xs text-gray-400 italic">Based on NICE Guidelines (NG28)</p>
         </div>
 
         <div className="bg-white p-6 rounded-xl border border-gray-200">
@@ -472,10 +564,11 @@ export default function DashboardHome() {
                     type="number"
                     value={glucoseForm.value}
                     onChange={(e) => setGlucoseForm({ ...glucoseForm, value: e.target.value })}
-                    placeholder="98"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 pr-16"
+                    placeholder="5.5"
+                    step="0.1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 pr-20"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">mg/dL</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">mmol/L</span>
                 </div>
               </div>
 
