@@ -1,0 +1,51 @@
+{
+  "name": "@stratosphere/mobile",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@react-navigation/bottom-tabs": "^6.5.11",
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/native-stack": "^6.9.17",
+    "@stratosphere/api-client": "workspace:*",
+    "@stratosphere/types": "workspace:*",
+    "@stratosphere/validation": "workspace:*",
+    "axios": "^1.6.2",
+    "i18next": "^23.7.6",
+    "react": "18.2.0",
+    "react-i18next": "^13.5.0",
+    "react-native": "0.73.1",
+    "react-native-keychain": "^8.1.2",
+    "react-native-safe-area-context": "^4.8.2",
+    "react-native-screens": "^3.29.0",
+    "react-native-svg": "^14.1.0",
+    "zod": "^3.22.4",
+    "zustand": "^4.4.7"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.5",
+    "@babel/preset-env": "^7.23.5",
+    "@babel/runtime": "^7.23.5",
+    "@react-native/babel-preset": "0.73.18",
+    "@react-native/eslint-config": "0.73.2",
+    "@react-native/metro-config": "0.73.2",
+    "@react-native/typescript-config": "0.73.1",
+    "@types/react": "^18.2.42",
+    "@types/react-test-renderer": "^18.0.7",
+    "babel-jest": "^29.7.0",
+    "eslint": "^8.55.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.1.0",
+    "react-test-renderer": "18.2.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
