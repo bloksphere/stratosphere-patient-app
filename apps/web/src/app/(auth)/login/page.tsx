@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,13 +19,18 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // TODO: Implement actual login API call
-      console.log('Login attempt:', { email });
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      router.push('/home');
+      const result = await login(email, password);
+
+      if (result.success) {
+        router.push('/home');
+      } else if (result.requiresMfa) {
+        // Handle MFA if needed
+        setError('MFA required - not implemented in demo');
+      } else {
+        setError(result.error || 'Invalid email or password');
+      }
     } catch {
-      setError('Invalid email or password');
+      setError('Login failed. Please try again.');
     } finally {
       setLoading(false);
     }

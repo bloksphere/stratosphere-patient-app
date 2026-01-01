@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -33,8 +34,15 @@ export default function RegisterPage() {
     setLoading(true);
     setError('');
 
+    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
       setLoading(false);
       return;
     }
@@ -46,10 +54,35 @@ export default function RegisterPage() {
     }
 
     try {
-      // TODO: Implement actual registration API call
-      console.log('Registration attempt:', formData);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      router.push('/verify-email');
+      // Simulate registration - store user in localStorage for demo
+      const user = {
+        id: crypto.randomUUID(),
+        email: formData.email,
+        email_verified: true,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone: formData.phone || undefined,
+        phone_verified: false,
+        status: 'active',
+        mfa_enabled: false,
+        data_processing_consent: true,
+        marketing_consent: false,
+        created_at: new Date().toISOString(),
+      };
+
+      // Store user data and mock tokens
+      localStorage.setItem('demo_user', JSON.stringify(user));
+      localStorage.setItem('demo_users', JSON.stringify({
+        ...JSON.parse(localStorage.getItem('demo_users') || '{}'),
+        [formData.email]: { ...user, password: formData.password }
+      }));
+
+      // Set auth cookies
+      Cookies.set('access_token', 'demo_token_' + user.id, { sameSite: 'lax' });
+      Cookies.set('refresh_token', 'demo_refresh_' + user.id, { sameSite: 'lax' });
+
+      // Redirect to dashboard
+      router.push('/home');
     } catch {
       setError('Registration failed. Please try again.');
     } finally {

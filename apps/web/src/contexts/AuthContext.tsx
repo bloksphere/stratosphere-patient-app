@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import Cookies from 'js-cookie';
-import { authApi, userApi, User } from '@/lib/api';
+import { User } from '@/lib/api';
 
 interface AuthContextType {
   user: User | null;
@@ -27,9 +27,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const response = await userApi.getProfile();
-      setUser(response.data);
-    } catch (error) {
+      // Demo mode: get user from localStorage
+      const demoUser = localStorage.getItem('demo_user');
+      if (demoUser) {
+        setUser(JSON.parse(demoUser));
+        return;
+      }
+
+      // No user found
+      setUser(null);
+      Cookies.remove('access_token');
+      Cookies.remove('refresh_token');
+    } catch {
       setUser(null);
       Cookies.remove('access_token');
       Cookies.remove('refresh_token');
@@ -48,32 +57,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await authApi.login({ email, password });
-      const data = response.data;
+      // Demo mode: check localStorage for user
+      const demoUsers = JSON.parse(localStorage.getItem('demo_users') || '{}');
+      const storedUser = demoUsers[email];
 
-      if (data.requires_mfa) {
-        return { success: false, requiresMfa: true };
+      if (!storedUser) {
+        return { success: false, error: 'No account found with this email. Please register first.' };
       }
 
-      // Store tokens
-      Cookies.set('access_token', data.access_token, { sameSite: 'lax' });
-      Cookies.set('refresh_token', data.refresh_token, { sameSite: 'lax' });
+      if (storedUser.password !== password) {
+        return { success: false, error: 'Invalid password. Please try again.' };
+      }
 
-      // Fetch user profile
-      await refreshUser();
+      // Login successful
+      const { password: _, ...userWithoutPassword } = storedUser;
+      localStorage.setItem('demo_user', JSON.stringify(userWithoutPassword));
 
+      Cookies.set('access_token', 'demo_token_' + storedUser.id, { sameSite: 'lax' });
+      Cookies.set('refresh_token', 'demo_refresh_' + storedUser.id, { sameSite: 'lax' });
+
+      setUser(userWithoutPassword);
       return { success: true };
-    } catch (error: any) {
-      const message = error.response?.data?.error || 'Login failed. Please try again.';
-      return { success: false, error: message };
+    } catch {
+      return { success: false, error: 'Login failed. Please try again.' };
     }
   };
 
   const logout = async () => {
     try {
-      await authApi.logout();
-    } catch (error) {
-      // Ignore error, proceed with logout
+      localStorage.removeItem('demo_user');
     } finally {
       Cookies.remove('access_token');
       Cookies.remove('refresh_token');

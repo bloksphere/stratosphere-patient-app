@@ -1,8 +1,24 @@
+'use client';
+
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function DashboardHome() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
+  const firstName = user?.first_name || 'there';
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Welcome back, John</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {firstName}</h1>
         <p className="text-gray-600">Here is an overview of your health</p>
       </div>
 
