@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   LineChart,
   Line,
@@ -42,6 +43,7 @@ type ModalType = 'bp' | 'glucose' | 'weight' | 'appointment' | null;
 
 export default function DashboardHome() {
   const { user, isLoading } = useAuth();
+  const { theme } = useTheme();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [healthReadings, setHealthReadings] = useState<HealthReading[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -403,7 +405,7 @@ export default function DashboardHome() {
             }`}>{bpStatus.label}</span>
           </div>
           <div className="flex items-baseline">
-            <span className="text-3xl font-bold text-gray-900">
+            <span className={`text-3xl font-bold ${theme === 'dark' ? 'text-orange-400' : 'text-gray-900'}`}>
               {latestBP ? `${latestBP.systolic}/${latestBP.diastolic}` : '--/--'}
             </span>
             <span className="ml-2 text-sm text-gray-500">mmHg</span>
@@ -437,7 +439,7 @@ export default function DashboardHome() {
             }`}>{glucoseStatus.label}</span>
           </div>
           <div className="flex items-baseline">
-            <span className="text-3xl font-bold text-gray-900">
+            <span className={`text-3xl font-bold ${theme === 'dark' ? 'text-orange-400' : 'text-gray-900'}`}>
               {latestGlucose ? latestGlucose.glucose?.toFixed(1) : '--'}
             </span>
             <span className="ml-2 text-sm text-gray-500">mmol/L</span>
@@ -476,7 +478,7 @@ export default function DashboardHome() {
             )}
           </div>
           <div className="flex items-baseline">
-            <span className="text-3xl font-bold text-gray-900">
+            <span className={`text-3xl font-bold ${theme === 'dark' ? 'text-orange-400' : 'text-gray-900'}`}>
               {latestWeight ? latestWeight.weight?.toFixed(1) : '--'}
             </span>
             <span className="ml-2 text-sm text-gray-500">kg</span>
@@ -519,9 +521,9 @@ export default function DashboardHome() {
                     }))}
                   margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" />
-                  <YAxis domain={[40, 200]} tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.4} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#d1d5db" />
+                  <YAxis domain={[40, 200]} tick={{ fontSize: 11 }} stroke="#d1d5db" />
                   <Tooltip
                     contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
                     formatter={(value: number, name: string) => [
@@ -530,13 +532,13 @@ export default function DashboardHome() {
                     ]}
                   />
                   {/* Healthy range shading */}
-                  <ReferenceArea y1={90} y2={120} fill="#22c55e" fillOpacity={0.1} />
-                  <ReferenceArea y1={60} y2={80} fill="#10b981" fillOpacity={0.1} />
-                  {/* NICE Guidelines reference lines - no inline labels */}
-                  <ReferenceLine y={120} stroke="#22c55e" strokeDasharray="5 5" />
-                  <ReferenceLine y={135} stroke="#f59e0b" strokeDasharray="5 5" />
-                  <ReferenceLine y={80} stroke="#10b981" strokeDasharray="5 5" />
-                  <ReferenceLine y={85} stroke="#f59e0b" strokeDasharray="5 5" />
+                  <ReferenceArea y1={90} y2={120} fill="#22c55e" fillOpacity={0.05} />
+                  <ReferenceArea y1={60} y2={80} fill="#10b981" fillOpacity={0.05} />
+                  {/* NICE Guidelines reference lines - subtle */}
+                  <ReferenceLine y={120} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.4} />
+                  <ReferenceLine y={135} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.4} />
+                  <ReferenceLine y={80} stroke="#10b981" strokeDasharray="5 5" strokeOpacity={0.4} />
+                  <ReferenceLine y={85} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.4} />
                   <Line
                     type="monotone"
                     dataKey="systolic"
@@ -584,20 +586,20 @@ export default function DashboardHome() {
                     }))}
                   margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" />
-                  <YAxis domain={[0, 15]} tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.4} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#d1d5db" />
+                  <YAxis domain={[0, 15]} tick={{ fontSize: 11 }} stroke="#d1d5db" />
                   <Tooltip
                     contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
                     formatter={(value: number) => [`${value.toFixed(1)} mmol/L`, 'Glucose']}
                   />
                   {/* Healthy range shading (4.0-5.9 mmol/L) */}
-                  <ReferenceArea y1={4.0} y2={5.9} fill="#22c55e" fillOpacity={0.15} />
-                  {/* NICE Guidelines reference lines - no inline labels */}
-                  <ReferenceLine y={4.0} stroke="#ef4444" strokeDasharray="5 5" />
-                  <ReferenceLine y={5.9} stroke="#22c55e" strokeDasharray="5 5" />
-                  <ReferenceLine y={7.0} stroke="#f59e0b" strokeDasharray="5 5" />
-                  <ReferenceLine y={11.1} stroke="#ef4444" strokeDasharray="5 5" />
+                  <ReferenceArea y1={4.0} y2={5.9} fill="#22c55e" fillOpacity={0.08} />
+                  {/* NICE Guidelines reference lines - subtle */}
+                  <ReferenceLine y={4.0} stroke="#ef4444" strokeDasharray="5 5" strokeOpacity={0.4} />
+                  <ReferenceLine y={5.9} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.4} />
+                  <ReferenceLine y={7.0} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.4} />
+                  <ReferenceLine y={11.1} stroke="#ef4444" strokeDasharray="5 5" strokeOpacity={0.4} />
                   <Line
                     type="monotone"
                     dataKey="glucose"
@@ -639,12 +641,12 @@ export default function DashboardHome() {
                     }))}
                   margin={{ top: 10, right: 20, left: 0, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.4} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#d1d5db" />
                   <YAxis
                     domain={['dataMin - 5', 'dataMax + 5']}
                     tick={{ fontSize: 11 }}
-                    stroke="#9ca3af"
+                    stroke="#d1d5db"
                     tickFormatter={(value) => value.toFixed(0)}
                   />
                   <Tooltip
